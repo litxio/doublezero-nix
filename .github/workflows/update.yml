@@ -1,0 +1,51 @@
+name: Check for updates
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for updates
+        id: update
+        run: |
+          chmod +x scripts/update.sh
+          ./scripts/update.sh
+
+      - name: Install Nix
+        if: steps.update.outputs.UPDATED == 'true'
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Test build
+        if: steps.update.outputs.UPDATED == 'true'
+        run: nix build --no-link
+
+      - name: Create Pull Request
+        if: steps.update.outputs.UPDATED == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update doublezero to ${{ steps.update.outputs.DOUBLEZERO_VERSION }}"
+          title: "Update doublezero to ${{ steps.update.outputs.DOUBLEZERO_VERSION }}"
+          body: |
+            Automated update to latest upstream versions:
+            - doublezero: ${{ steps.update.outputs.DOUBLEZERO_VERSION }}
+            - doublezero-solana: ${{ steps.update.outputs.SOLANA_VERSION }}
+
+            Build tested successfully.
+          branch: update-doublezero
+          delete-branch: true
