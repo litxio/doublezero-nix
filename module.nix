@@ -45,6 +45,17 @@ in
       example = [ "-debug" ];
       description = "Extra command-line arguments to pass to doublezerod.";
     };
+
+    restrictNetworkInterfaces = lib.mkOption {
+      type = lib.types.nullOr (lib.types.listOf lib.types.str);
+      default = null;
+      example = [ "eth0" "lo" ];
+      description = ''
+        Restrict which network interfaces the daemon can access.
+        When set, the daemon will only be able to see and use the specified interfaces.
+        Requires systemd 252 or later. Set to null to disable (default).
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -93,6 +104,8 @@ in
         LockPersonality = true;
         MemoryDenyWriteExecute = true;
         SystemCallArchitectures = "native";
+      } // lib.optionalAttrs (cfg.restrictNetworkInterfaces != null) {
+        RestrictNetworkInterfaces = cfg.restrictNetworkInterfaces;
       };
     };
 
