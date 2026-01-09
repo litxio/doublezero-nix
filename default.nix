@@ -62,7 +62,6 @@ in stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    doublezero-solana
     openssl
     stdenv.cc.cc.lib
   ];
@@ -73,9 +72,12 @@ in stdenv.mkDerivation rec {
 
   installPhase = ''
     runHook preInstall
-    mkdir -p $out
+    mkdir -p $out/bin
     cp -r usr/* $out/ || true
     cp -r etc $out/ || true
+
+    # Symlink doublezero-solana into bin
+    ln -s ${doublezero-solana}/bin/doublezero-solana $out/bin/doublezero-solana
     runHook postInstall
   '';
 
