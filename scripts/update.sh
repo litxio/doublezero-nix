@@ -65,8 +65,8 @@ UPDATED=0
 if [ "$CURRENT_SOLANA" != "$SOLANA_NIX_VERSION" ]; then
     echo "Updating doublezero-solana: $CURRENT_SOLANA -> $SOLANA_NIX_VERSION"
     sed -i "s/pname = \"doublezero-solana\";/pname = \"doublezero-solana\";/; /pname = \"doublezero-solana\";/{n;s/version = \".*\"/version = \"$SOLANA_NIX_VERSION\"/}" "$DEFAULT_NIX"
-    # Update sha256 for solana (first occurrence after doublezero-solana)
-    sed -i "0,/doublezero-solana/{ /doublezero-solana/,/sha256 = /{ s/sha256 = \"[a-f0-9]*\"/sha256 = \"$SOLANA_SHA256\"/ } }" "$DEFAULT_NIX"
+    # Update sha256 for solana (within the doublezero-solana derivation block)
+    sed -i '/pname = "doublezero-solana"/,/};/{s/sha256 = "[a-f0-9]*"/sha256 = "'"$SOLANA_SHA256"'"/}' "$DEFAULT_NIX"
     UPDATED=1
 fi
 
