@@ -3,7 +3,8 @@ set -euo pipefail
 
 # Fetches latest versions from Cloudsmith and updates default.nix
 
-REPO_URL="https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/dists/bookworm/main/binary-amd64/Packages"
+REPO_BASE="https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian"
+REPO_URL="$REPO_BASE/dists/bookworm/main/binary-amd64/Packages"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_NIX="$SCRIPT_DIR/../default.nix"
 
@@ -42,15 +43,19 @@ echo "Latest doublezero-solana: $SOLANA_VERSION"
 DOUBLEZERO_NIX_VERSION="${DOUBLEZERO_VERSION%-*}"
 SOLANA_NIX_VERSION="${SOLANA_VERSION%-*}"
 
-# Get SHA256 hashes
+# Get SHA256 hashes and filenames
 eval "$(get_package_info "doublezero" "$DOUBLEZERO_VERSION")"
 DOUBLEZERO_SHA256="$sha256"
+DOUBLEZERO_URL="$REPO_BASE/$filename"
 
 eval "$(get_package_info "doublezero-solana" "$SOLANA_VERSION")"
 SOLANA_SHA256="$sha256"
+SOLANA_URL="$REPO_BASE/$filename"
 
 echo "doublezero SHA256: $DOUBLEZERO_SHA256"
+echo "doublezero URL: $DOUBLEZERO_URL"
 echo "doublezero-solana SHA256: $SOLANA_SHA256"
+echo "doublezero-solana URL: $SOLANA_URL"
 
 # Read current versions from default.nix
 CURRENT_DOUBLEZERO=$(grep -A2 'pname = "doublezero"' "$DEFAULT_NIX" | grep 'version =' | head -1 | sed 's/.*"\(.*\)".*/\1/')
@@ -59,24 +64,34 @@ CURRENT_SOLANA=$(grep -A2 'pname = "doublezero-solana"' "$DEFAULT_NIX" | grep 'v
 echo "Current doublezero: $CURRENT_DOUBLEZERO"
 echo "Current doublezero-solana: $CURRENT_SOLANA"
 
+# Escape URL for use in sed replacement (handle & and /)
+escape_sed() {
+    printf '%s\n' "$1" | sed 's/[&/\]/\\&/g'
+}
+
 UPDATED=0
 
 # Update doublezero-solana if needed
 if [ "$CURRENT_SOLANA" != "$SOLANA_NIX_VERSION" ]; then
     echo "Updating doublezero-solana: $CURRENT_SOLANA -> $SOLANA_NIX_VERSION"
-    sed -i "s/pname = \"doublezero-solana\";/pname = \"doublezero-solana\";/; /pname = \"doublezero-solana\";/{n;s/version = \".*\"/version = \"$SOLANA_NIX_VERSION\"/}" "$DEFAULT_NIX"
-    # Update sha256 for solana (within the doublezero-solana derivation block)
-    sed -i '/pname = "doublezero-solana"/,/};/{s/sha256 = "[a-f0-9]*"/sha256 = "'"$SOLANA_SHA256"'"/}' "$DEFAULT_NIX"
+    ESCAPED_SOLANA_URL=$(escape_sed "$SOLANA_URL")
+    sed -i '/pname = "doublezero-solana"/,/};/{
+        s/version = "[^"]*"/version = "'"$SOLANA_NIX_VERSION"'"/
+        s|url = "[^"]*"|url = "'"$ESCAPED_SOLANA_URL"'"|
+        s/sha256 = "[a-f0-9]*"/sha256 = "'"$SOLANA_SHA256"'"/
+    }' "$DEFAULT_NIX"
     UPDATED=1
 fi
 
 # Update doublezero if needed
 if [ "$CURRENT_DOUBLEZERO" != "$DOUBLEZERO_NIX_VERSION" ]; then
     echo "Updating doublezero: $CURRENT_DOUBLEZERO -> $DOUBLEZERO_NIX_VERSION"
-    # Update version in the main derivation (after "in stdenv.mkDerivation")
-    sed -i "/^in stdenv.mkDerivation/,/^}$/{s/version = \"$CURRENT_DOUBLEZERO\"/version = \"$DOUBLEZERO_NIX_VERSION\"/}" "$DEFAULT_NIX"
-    # Update sha256 for main package
-    sed -i "/^in stdenv.mkDerivation/,/^}$/{s/sha256 = \"[a-f0-9]*\"/sha256 = \"$DOUBLEZERO_SHA256\"/}" "$DEFAULT_NIX"
+    ESCAPED_DOUBLEZERO_URL=$(escape_sed "$DOUBLEZERO_URL")
+    sed -i '/^in stdenv.mkDerivation/,/^}/{
+        s/version = "'"$CURRENT_DOUBLEZERO"'"/version = "'"$DOUBLEZERO_NIX_VERSION"'"/
+        s|url = "[^"]*"|url = "'"$ESCAPED_DOUBLEZERO_URL"'"|
+        s/sha256 = "[a-f0-9]*"/sha256 = "'"$DOUBLEZERO_SHA256"'"/
+    }' "$DEFAULT_NIX"
     UPDATED=1
 fi
 
