@@ -9,11 +9,11 @@
 let
   doublezero-solana = stdenv.mkDerivation rec {
     pname = "doublezero-solana";
-    version = "0.5.2";
+    version = "0.5.3";
 
     src = fetchurl {
-      url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero-solana_0.5.2-1/doublezero-solana_0.5.2_linux_amd64.deb";
-      sha256 = "83463d15c32a4fd141af284e20294d134d4f7c439cb953311c23d5ba81638383";
+      url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero-solana_0.5.3-1/doublezero-solana_0.5.3_linux_amd64.deb";
+      sha256 = "db6ef95681c8b22381f5a23b4db9aa7fa59a10f2d0904fc4a1fdfe8a4ac800e5";
     };
 
     nativeBuildInputs = [
@@ -49,11 +49,11 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "doublezero";
-  version = "0.16.0";
+  version = "0.18.0";
 
   src = fetchurl {
-    url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero_0.16.0-1/doublezero-mainnet-beta_0.16.0_amd64.deb";
-    sha256 = "c835155a225ef9c40d6f49c0d8242df3756e046bd02ae59194d6059587d6ec33";
+    url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero_0.18.0-1/doublezero-mainnet-beta_0.18.0_amd64.deb";
+    sha256 = "764fbf710b521145c11a7315beba6b48f70e85b4b5db0a9f1c7d018fb5b7429e";
   };
 
   nativeBuildInputs = [
