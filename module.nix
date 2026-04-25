@@ -85,6 +85,24 @@ in
           "-env ${cfg.environment}"
         ] ++ cfg.extraArgs);
 
+        ExecStartPost = [
+          "${pkgs.iptables}/bin/iptables -A OUTPUT -p gre -j ACCEPT"
+          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT"
+          "${pkgs.iptables}/bin/iptables -A OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT"
+          "${pkgs.iptables}/bin/iptables -A OUTPUT -o doublezero1 -p pim -j ACCEPT"
+          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero1 -p udp --dport 7733 -j ACCEPT"
+          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero0 -p udp --dport 44880 -j ACCEPT"
+        ];
+
+        ExecStopPost = [
+          "${pkgs.iptables}/bin/iptables -D OUTPUT -p gre -j ACCEPT || true"
+          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || true"
+          "${pkgs.iptables}/bin/iptables -D OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || true"
+          "${pkgs.iptables}/bin/iptables -D OUTPUT -o doublezero1 -p pim -j ACCEPT || true"
+          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero1 -p udp --dport 7733 -j ACCEPT || true"
+          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero0 -p udp --dport 44880 -j ACCEPT || true"
+        ];
+
         # Security hardening (matching upstream service)
         AmbientCapabilities = [ "CAP_NET_ADMIN" "CAP_NET_RAW" ];
         CapabilityBoundingSet = [ "CAP_NET_ADMIN" "CAP_NET_RAW" ];
