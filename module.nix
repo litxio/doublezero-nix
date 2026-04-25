@@ -85,24 +85,6 @@ in
           "-env ${cfg.environment}"
         ] ++ cfg.extraArgs);
 
-        ExecStartPost = [
-          "${pkgs.iptables}/bin/iptables -A OUTPUT -p gre -j ACCEPT"
-          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT"
-          "${pkgs.iptables}/bin/iptables -A OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT"
-          "${pkgs.iptables}/bin/iptables -A OUTPUT -o doublezero1 -p pim -j ACCEPT"
-          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero1 -p udp --dport 7733 -j ACCEPT"
-          "${pkgs.iptables}/bin/iptables -A INPUT -i doublezero0 -p udp --dport 44880 -j ACCEPT"
-        ];
-
-        ExecStopPost = [
-          "${pkgs.iptables}/bin/iptables -D OUTPUT -p gre -j ACCEPT || true"
-          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || true"
-          "${pkgs.iptables}/bin/iptables -D OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || true"
-          "${pkgs.iptables}/bin/iptables -D OUTPUT -o doublezero1 -p pim -j ACCEPT || true"
-          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero1 -p udp --dport 7733 -j ACCEPT || true"
-          "${pkgs.iptables}/bin/iptables -D INPUT -i doublezero0 -p udp --dport 44880 -j ACCEPT || true"
-        ];
-
         # Security hardening (matching upstream service)
         AmbientCapabilities = [ "CAP_NET_ADMIN" "CAP_NET_RAW" ];
         CapabilityBoundingSet = [ "CAP_NET_ADMIN" "CAP_NET_RAW" ];
@@ -125,6 +107,26 @@ in
       } // lib.optionalAttrs (cfg.restrictNetworkInterfaces != null) {
         RestrictNetworkInterfaces = cfg.restrictNetworkInterfaces;
       };
+    };
+
+
+    networking.firewall = {
+      interfaces.doublezero1.allowedUDPPorts = [ 7733 ];
+      interfaces.doublezero0.allowedUDPPorts = [ 44880 ];
+
+      extraCommands = ''
+        iptables -A nixos-fw -i doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j nixos-fw-accept
+
+        iptables -C OUTPUT -p gre -j ACCEPT || iptables -A OUTPUT -p gre -j ACCEPT
+        iptables -C OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || iptables -A OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT
+        iptables -C OUTPUT -o doublezero1 -p pim -j ACCEPT || iptables -A OUTPUT -o doublezero1 -p pim -j ACCEPT
+      '';
+
+      extraStopCommands = ''
+        iptables -D OUTPUT -p gre -j ACCEPT || true
+        iptables -D OUTPUT -o doublezero1 -s 169.254.0.0/16 -d 169.254.0.0/16 -p tcp --dport 179 -j ACCEPT || true
+        iptables -D OUTPUT -o doublezero1 -p pim -j ACCEPT || true
+      '';
     };
 
     # Make the CLI tool available system-wide
