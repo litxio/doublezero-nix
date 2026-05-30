@@ -9,11 +9,11 @@
 let
   doublezero-solana = stdenv.mkDerivation rec {
     pname = "doublezero-solana";
-    version = "0.5.6~rc1";
+    version = "0.5.6";
 
     src = fetchurl {
-      url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero-solana_0.5.6~rc1-1/doublezero-solana_0.5.6-rc1_linux_amd64.deb";
-      sha256 = "58c9bc8b49c1087deaa6af47e3d13d2d134d48bf9418c6201b0a5a65da001a61";
+      url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero-solana_0.5.6-1/doublezero-solana_0.5.6_linux_amd64.deb";
+      sha256 = "b3ce4d9b0432cd869dbac8184019c559bec60bb7c9a809e18487bb8d990dd848";
     };
 
     nativeBuildInputs = [
