@@ -49,11 +49,11 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "doublezero";
-  version = "0.24.0";
+  version = "0.25.1";
 
   src = fetchurl {
-    url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero_0.24.0-1/doublezero-mainnet-beta_0.24.0_amd64.deb";
-    sha256 = "0a6e854bef33f40e409eb221d93ea2eca75d931d0d8ba6196f2f0db2b84932be";
+    url = "https://dl.cloudsmith.io/public/malbeclabs/doublezero/deb/debian/pool/any-version/main/d/do/doublezero_0.25.1-1/doublezero-mainnet-beta_0.25.1_amd64.deb";
+    sha256 = "579cc7cbeadaace0ff75ff58af933f421d18910409e145b6105900ef810b2012";
   };
 
   nativeBuildInputs = [
